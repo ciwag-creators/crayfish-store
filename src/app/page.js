@@ -1,66 +1,139 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [message, setMessage] = useState("");
+
+  const pricePerKg = 2000; // Change to your price
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const amount = quantity * pricePerKg;
+
+    // Save order as pending
+    const { data, error } = await supabase.from("orders").insert([
+      {
+        customer_name: name,
+        phone: phone,
+        address: address,
+        quantity: quantity,
+        amount: amount,
+        payment_status: "pending",
+      },
+    ]);
+
+    if (error) {
+      setMessage("Error placing order. Try again.");
+      console.log(error);
+    } else {
+      setMessage("Order placed! Proceed to payment.");
+      console.log(data);
+    }
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div style={styles.container}>
+      <h1 style={styles.title}>Crayfish Store 🚀</h1>
+      <p style={styles.text}>Price: ₦{pricePerKg} per kg</p>
+
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Your Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+        />
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Delivery Address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          required
+        />
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Quantity (kg)"
+          value={quantity}
+          min="1"
+          onChange={(e) => setQuantity(parseInt(e.target.value))}
+          required
+        />
+        <button type="submit" style={styles.button}>
+          Place Order
+        </button>
+      </form>
+
+      {message && <p style={styles.message}>{message}</p>}
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    fontFamily: "Arial, sans-serif",
+    padding: "20px",
+    backgroundColor: "#fffbe6",
+  },
+  title: {
+    fontSize: "2.5rem",
+    fontWeight: "bold",
+    marginBottom: "10px",
+    color: "#d35400",
+  },
+  text: {
+    fontSize: "1.2rem",
+    marginBottom: "20px",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+    width: "100%",
+    maxWidth: "400px",
+  },
+  input: {
+    padding: "10px",
+    fontSize: "1rem",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
+  },
+  button: {
+    padding: "12px",
+    fontSize: "1rem",
+    backgroundColor: "#e67e22",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  message: {
+    marginTop: "15px",
+    color: "green",
+    fontWeight: "bold",
+  },
+};
