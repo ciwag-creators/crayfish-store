@@ -40,7 +40,7 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Crayfish Store 🚀</h1>
+      <h1 style={styles.title}>TD FOODS(CRAYFISH DISTRIBUTORS) 🚀</h1>
       <p style={styles.text}>Price: ₦{pricePerKg} per kg</p>
 
       <form onSubmit={handleSubmit} style={styles.form}>
