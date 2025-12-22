@@ -8,132 +8,104 @@ export default function Home() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const pricePerKg = 2000; // Change to your price
+  const pricePerKg = 2000;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const saveOrder = async (reference) => {
+  const amount = quantity * pricePerKg;
 
-    const amount = quantity * pricePerKg;
+  const { error } = await supabase.from("orders").insert([
+    {
+      customer_name: name,
+      phone,
+      address,
+      quantity,
+      amount,
+      payment_reference: reference,
+      payment_status: "paid",
+    },
+  ]);
 
-    // Save order as pending
-    const { data, error } = await supabase.from("orders").insert([
-      {
-        customer_name: name,
-        phone: phone,
-        address: address,
-        quantity: quantity,
-        amount: amount,
-        payment_status: "pending",
-      },
-    ]);
+  if (error) {
+    console.error(error);
+    alert("Payment received, but order saving failed.");
+  } else {
+    alert("Payment successful! We will contact you shortly.");
+  }
 
-    if (error) {
-      setMessage("Error placing order. Try again.");
-      console.log(error);
-    } else {
-      setMessage("Order placed! Proceed to payment.");
-      console.log(data);
-    }
-  };
+  setLoading(false);
+};
+
+const payWithPaystack = () => {
+  if (!window.PaystackPop) {
+    alert("Paystack not ready. Refresh page.");
+    return;
+  }
+
+  if (!name || !phone || !address) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  setLoading(true);
+
+  const amountInKobo = quantity * pricePerKg * 100;
+
+  const handler = window.PaystackPop.setup({
+    key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+    email: `${phone}@crayfish.com`,
+    amount: amountInKobo,
+    currency: "NGN",
+    ref: "CRAY_" + Date.now(),
+
+    // ✅ MUST be a normal function
+    callback: function (response) {
+      saveOrder(response.reference);
+    },
+
+    onClose: function () {
+      setLoading(false);
+    },
+  });
+
+  handler.openIframe();
+};
+
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>TD FOODS(CRAYFISH DISTRIBUTORS) 🚀</h1>
-      <p style={styles.text}>Price: ₦{pricePerKg} per kg</p>
+      <h1 style={styles.title}>Crayfish Store 🦐</h1>
+      <p>₦{pricePerKg} per kg</p>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Your Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Delivery Address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          required
-        />
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Quantity (kg)"
-          value={quantity}
-          min="1"
-          onChange={(e) => setQuantity(parseInt(e.target.value))}
-          required
-        />
-        <button type="submit" style={styles.button}>
-          Place Order
-        </button>
-      </form>
+      <input style={styles.input} placeholder="Name" onChange={(e) => setName(e.target.value)} />
+      <input style={styles.input} placeholder="Phone" onChange={(e) => setPhone(e.target.value)} />
+      <input style={styles.input} placeholder="Address" onChange={(e) => setAddress(e.target.value)} />
+      <input
+        style={styles.input}
+        type="number"
+        min="1"
+        value={quantity}
+        onChange={(e) => setQuantity(Number(e.target.value))}
+      />
 
-      {message && <p style={styles.message}>{message}</p>}
+      <button style={styles.button} onClick={payWithPaystack} disabled={loading}>
+        {loading ? "Processing..." : "Pay Now"}
+      </button>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    fontFamily: "Arial, sans-serif",
-    padding: "20px",
-    backgroundColor: "#fffbe6",
-  },
-  title: {
-    fontSize: "2.5rem",
-    fontWeight: "bold",
-    marginBottom: "10px",
-    color: "#d35400",
-  },
-  text: {
-    fontSize: "1.2rem",
-    marginBottom: "20px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    width: "100%",
-    maxWidth: "400px",
-  },
-  input: {
-    padding: "10px",
-    fontSize: "1rem",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-  },
+  container: { minHeight: "100vh", padding: 20, fontFamily: "Arial" },
+  title: { fontSize: "2rem", fontWeight: "bold" },
+  input: { padding: 10, margin: "8px 0", width: "100%" },
   button: {
-    padding: "12px",
-    fontSize: "1rem",
-    backgroundColor: "#e67e22",
+    padding: 12,
+    backgroundColor: "#0aa",
     color: "#fff",
     border: "none",
-    borderRadius: "5px",
+    fontSize: "1rem",
     cursor: "pointer",
-    fontWeight: "bold",
-  },
-  message: {
-    marginTop: "15px",
-    color: "green",
-    fontWeight: "bold",
   },
 };
