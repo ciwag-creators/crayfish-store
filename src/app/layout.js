@@ -19,18 +19,16 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable}`}
-      >
-        {/* ✅ Proper Paystack Script */}
+    <html lang="en">
+      <body>
+        {children}
+
         <Script
           src="https://js.paystack.co/v1/inline.js"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
-
-        {children}
       </body>
     </html>
   );
 }
+

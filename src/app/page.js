@@ -39,7 +39,7 @@ const saveOrder = async (reference) => {
 
 const payWithPaystack = () => {
   if (!window.PaystackPop) {
-    alert("Paystack not ready. Refresh page.");
+    alert("Payment system not ready. Please refresh.");
     return;
   }
 
